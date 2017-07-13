@@ -28,13 +28,13 @@ void begin_session(session_t *sess)
 		close(sockfds[0]);
 		sess->child_fd = sockfds[1];
 		*/
-		priv_sock_set_child_context(sess);
+		priv_sock_set_child_context(sess);//设置子进程
 		handle_child(sess);
 	}
 	else
 	{
 
-		// nobody进程
+		// nobody进程，父进程
 		
 		/*
 		close(sockfds[1]);

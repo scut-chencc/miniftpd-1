@@ -6,10 +6,10 @@ int tcp_client(unsigned short port)
 	if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0)
 		ERR_EXIT("tcp_client");
 
-	if (port > 0)
+	if (port > 0)//对于客户端不一定要绑定端口，如果=0客户端没有绑定的话，也会选择一个随机端口
 	{
 		int on = 1;
-		if ((setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on))) < 0)
+		if ((setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on))) < 0)//设置地址重复利用
 			ERR_EXIT("setsockopt");
 
 		char ip[16] = {0};
@@ -43,7 +43,7 @@ int tcp_server(const char *host, unsigned short port)
 	servaddr.sin_family = AF_INET;
 	if (host != NULL)
 	{
-		if (inet_aton(host, &servaddr.sin_addr) == 0)
+		if (inet_aton(host, &servaddr.sin_addr) == 0)//不是有效地址可能是服务器主机名称
 		{
 			struct hostent *hp;
 			hp = gethostbyname(host);
@@ -54,12 +54,12 @@ int tcp_server(const char *host, unsigned short port)
 		}
 	}
 	else
-		servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+		servaddr.sin_addr.s_addr = htonl(INADDR_ANY);//inaddr_any=0
 
-	servaddr.sin_port = htons(port);
+	servaddr.sin_port = htons(port);//转化成网络字节序，如果是0的话则随机生成
 
 	int on = 1;
-	if ((setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on))) < 0)
+	if ((setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on))) < 0)//地址重复利用
 		ERR_EXIT("setsockopt");
 
 	if (bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0)
@@ -125,6 +125,7 @@ void deactivate_nonblock(int fd)
  * @fd: 文件描述符
  * @wait_seconds: 等待超时秒数，如果为0表示不检测超时
  * 成功（未超时）返回0，失败返回-1，超时返回-1并且errno = ETIMEDOUT
+	如果没有设置超时的话，返回0，但是read有可能阻塞
  */
 int read_timeout(int fd, unsigned int wait_seconds)
 {
@@ -198,6 +199,7 @@ int write_timeout(int fd, unsigned int wait_seconds)
  * @addr: 输出参数，返回对方地址
  * @wait_seconds: 等待超时秒数，如果为0表示正常模式
  * 成功（未超时）返回已连接套接字，超时返回-1并且errno = ETIMEDOUT
+ 失败返回-1
  */
 int accept_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
 {
@@ -251,10 +253,10 @@ int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
 	if (wait_seconds > 0)
 		activate_nonblock(fd);
 
-	ret = connect(fd, (struct sockaddr*)addr, addrlen);
-	if (ret < 0 && errno == EINPROGRESS)
+	ret = connect(fd, (struct sockaddr*)addr, addrlen);//如果直接调用就阻塞了，如果等待时间>0，则fd改为非阻塞
+	if (ret < 0 && errno == EINPROGRESS)//非阻塞下的状态
 	{
-		//printf("AAAAA\n");
+		printf("AAAAA\n");
 		fd_set connect_fdset;
 		struct timeval timeout;
 		FD_ZERO(&connect_fdset);
@@ -275,7 +277,7 @@ int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
 			return -1;
 		else if (ret == 1)
 		{
-			//printf("BBBBB\n");
+			printf("BBBBB\n");
 			/* ret返回为1，可能有两种情况，一种是连接建立成功，一种是套接字产生错误，*/
 			/* 此时错误信息不会保存至errno变量中，因此，需要调用getsockopt来获取。 */
 			int err;
@@ -285,14 +287,14 @@ int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
 			{
 				return -1;
 			}
-			if (err == 0)
+			if (err == 0)//第一种情况
 			{
-				//printf("DDDDDDD\n");
+				printf("DDDDDDD\n");
 				ret = 0;
 			}
-			else
+			else//第二种情况
 			{
-				//printf("CCCCCC\n");
+				printf("CCCCCC\n");
 				errno = err;
 				ret = -1;
 			}
@@ -302,6 +304,7 @@ int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
 	{
 		deactivate_nonblock(fd);
 	}
+	printf(" the connect_timeout ret is %d\n",ret);
 	return ret;
 }
 
@@ -608,17 +611,17 @@ const char* statbuf_get_date(struct stat *sbuf)
 static int lock_internal(int fd, int lock_type)
 {
 	int ret;
-	struct flock the_lock;
+	struct flock the_lock;//锁的结构体
 	memset(&the_lock, 0, sizeof(the_lock));
 	the_lock.l_type = lock_type;
 	the_lock.l_whence = SEEK_SET;
 	the_lock.l_start = 0;
-	the_lock.l_len = 0;
+	the_lock.l_len = 0;//整个文件加锁
 	do
 	{
 		ret = fcntl(fd, F_SETLKW, &the_lock);
 	}
-	while (ret < 0 && errno == EINTR);
+	while (ret < 0 && errno == EINTR);//被信号中断，继续加锁
 
 	return ret;
 }
@@ -640,7 +643,7 @@ int unlock_file(int fd)
 	int ret;
 	struct flock the_lock;
 	memset(&the_lock, 0, sizeof(the_lock));
-	the_lock.l_type = F_UNLCK;
+	the_lock.l_type = F_UNLCK;//无法解锁的话直接返回失败
 	the_lock.l_whence = SEEK_SET;
 	the_lock.l_start = 0;
 	the_lock.l_len = 0;

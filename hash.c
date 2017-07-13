@@ -71,7 +71,7 @@ void hash_add_entry(hash_t *hash, void *key, unsigned int key_size,
 	}
 	else
 	{
-		// 将新结点插入到链表头部
+		// 将新的结点插入到链表头部
 		node->next = *bucket;
 		(*bucket)->prev = node;
 		*bucket = node;

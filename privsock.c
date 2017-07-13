@@ -29,7 +29,7 @@ void priv_sock_close(session_t *sess)
 
 void priv_sock_set_parent_context(session_t *sess)
 {
-	if (sess->child_fd != -1)
+	if (sess->child_fd != -1)//只留父进程套接字
 	{
 		close(sess->child_fd);
 		sess->child_fd = -1;
@@ -38,7 +38,7 @@ void priv_sock_set_parent_context(session_t *sess)
 
 void priv_sock_set_child_context(session_t *sess)
 {
-	if (sess->parent_fd != -1)
+	if (sess->parent_fd != -1)//只留子进程套接字
 	{
 		close(sess->parent_fd);
 		sess->parent_fd = -1;
@@ -66,7 +66,7 @@ char priv_sock_get_cmd(int fd)
 		printf("ftp process exit\n");
 		exit(EXIT_SUCCESS);
 	}
-	if (ret != sizeof(res))
+	if (ret != sizeof(res))//如果服务进程关闭了，这个地方ret=0，不等于，所以退出；
 	{
 		fprintf(stderr, "priv_sock_get_cmd error\n");
 		exit(EXIT_FAILURE);
@@ -139,7 +139,7 @@ void priv_sock_send_buf(int fd, const char *buf, unsigned int len)
 void priv_sock_recv_buf(int fd, char *buf, unsigned int len)
 {
 	unsigned int recv_len = (unsigned int)priv_sock_get_int(fd);
-	if (recv_len > len)
+	if (recv_len > len)//内部协议没协商好
 	{
 		fprintf(stderr, "priv_sock_recv_buf error\n");
 		exit(EXIT_FAILURE);
@@ -162,5 +162,3 @@ int priv_sock_recv_fd(int sock_fd)
 {
 	return recv_fd(sock_fd);
 }
-
-

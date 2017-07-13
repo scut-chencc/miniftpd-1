@@ -28,7 +28,7 @@ parseconf_uint_array[] =
 	{ "accept_timeout", &tunable_accept_timeout },
 	{ "connect_timeout", &tunable_connect_timeout },
 	{ "idle_session_timeout", &tunable_idle_session_timeout },
-	{ "data_connection_timeout", &tunable_data_connection_timeout },
+	{ "data_connection_timeout", &tunable_data_connection_timeout },                   
 	{ "local_umask", &tunable_local_umask },
 	{ "upload_max_rate", &tunable_upload_max_rate },
 	{ "download_max_rate", &tunable_download_max_rate },
@@ -58,7 +58,7 @@ void parseconf_load_file(const char *path)
 	{
 		if (strlen(setting_line) == 0
 			|| setting_line[0] == '#'
-			|| str_all_space(setting_line))
+			|| str_all_space(setting_line))     
 			continue;
 
 		str_trim_crlf(setting_line);
@@ -93,10 +93,10 @@ void parseconf_load_setting(const char *setting)
 			if (strcmp(key, p_str_setting->p_setting_name) == 0)
 			{
 				const char **p_cur_setting = p_str_setting->p_variable;
-				if (*p_cur_setting)
+				if (*p_cur_setting)//说明之前有数据了
 					free((char*)*p_cur_setting);
 
-				*p_cur_setting = strdup(value);
+				*p_cur_setting = strdup(value);//指针指向新申请的内存
 				return;
 			}
 

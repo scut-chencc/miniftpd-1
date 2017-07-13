@@ -1,0 +1,192 @@
+./privsock.c:	sess->parent_fd = sockfds[0];
+./privsock.c:	sess->child_fd = sockfds[1];
+./privsock.c:	if (sess->parent_fd != -1)
+./privsock.c:		close(sess->parent_fd);
+./privsock.c:		sess->parent_fd = -1;
+./privsock.c:	if (sess->child_fd != -1)
+./privsock.c:		close(sess->child_fd);
+./privsock.c:		sess->child_fd = -1;
+./privsock.c:	if (sess->child_fd != -1)//只留父进程套接字
+./privsock.c:		close(sess->child_fd);
+./privsock.c:		sess->child_fd = -1;
+./privsock.c:	if (sess->parent_fd != -1)//只留子进程套接字
+./privsock.c:		close(sess->parent_fd);
+./privsock.c:		sess->parent_fd = -1;
+./session.c:	activate_oobinline(sess->ctrl_fd);
+./session.c:		sess->child_fd = sockfds[1];
+./session.c:		sess->parent_fd = sockfds[0];
+./main.c:	if (tunable_max_clients > 0 && sess->num_clients > tunable_max_clients)
+./main.c:	if (tunable_max_per_ip > 0 && sess->num_this_ip > tunable_max_per_ip)
+./privparent.c:		//read(sess->parent_fd, &cmd, 1);
+./privparent.c:		cmd = priv_sock_get_cmd(sess->parent_fd);
+./privparent.c:	unsigned short port = (unsigned short)priv_sock_get_int(sess->parent_fd);
+./privparent.c:	priv_sock_recv_buf(sess->parent_fd, ip, sizeof(ip));
+./privparent.c:		priv_sock_send_result(sess->parent_fd, PRIV_SOCK_RESULT_BAD);
+./privparent.c:		priv_sock_send_result(sess->parent_fd, PRIV_SOCK_RESULT_BAD);
+./privparent.c:	priv_sock_send_result(sess->parent_fd, PRIV_SOCK_RESULT_OK);
+./privparent.c:	priv_sock_send_fd(sess->parent_fd, fd);
+./privparent.c:	if (sess->pasv_listen_fd != -1)
+./privparent.c:	priv_sock_send_int(sess->parent_fd, active);
+./privparent.c:	sess->pasv_listen_fd = tcp_server(ip, 0);
+./privparent.c:	if (getsockname(sess->pasv_listen_fd, (struct sockaddr *)&addr, &addrlen) < 0)
+./privparent.c:	priv_sock_send_int(sess->parent_fd, (int)port);
+./privparent.c:	int fd = accept_timeout(sess->pasv_listen_fd, NULL, tunable_accept_timeout);
+./privparent.c:	close(sess->pasv_listen_fd);
+./privparent.c:	sess->pasv_listen_fd = -1;
+./privparent.c:		priv_sock_send_result(sess->parent_fd, PRIV_SOCK_RESULT_BAD);
+./privparent.c:	priv_sock_send_result(sess->parent_fd, PRIV_SOCK_RESULT_OK);
+./privparent.c:	priv_sock_send_fd(sess->parent_fd, fd);
+./ftpproto.c:	shutdown(p_sess->ctrl_fd, SHUT_RD);
+./ftpproto.c:	shutdown(p_sess->ctrl_fd, SHUT_WR);
+./ftpproto.c:	if (!p_sess->data_process)
+./ftpproto.c:	p_sess->data_process = 0;
+./ftpproto.c:	if (p_sess->data_fd == -1)//没有数据传输状态
+./ftpproto.c:	int ret = readline(p_sess->ctrl_fd, cmdline, MAX_COMMAND_LINE);
+./ftpproto.c:		p_sess->abor_received = 1;//只是登记abor命令接收
+./ftpproto.c:		shutdown(p_sess->data_fd, SHUT_RDWR);//断开数据连接通道
+./ftpproto.c:	if (sess->abor_received)
+./ftpproto.c:		sess->abor_received = 0;
+./ftpproto.c:		memset(sess->cmdline, 0, sizeof(sess->cmdline));
+./ftpproto.c:		memset(sess->cmd, 0, sizeof(sess->cmd));
+./ftpproto.c:		memset(sess->arg, 0, sizeof(sess->arg));
+./ftpproto.c:		ret = readline(sess->ctrl_fd, sess->cmdline, MAX_COMMAND_LINE);//客户端关闭返回为0，服务进程关闭
+./ftpproto.c:		printf("cmdline=[%s]\n", sess->cmdline); //打印接收到的命令
+./ftpproto.c:		str_trim_crlf(sess->cmdline);
+./ftpproto.c:		printf("cmdline=[%s]\n", sess->cmdline);
+./ftpproto.c:		str_split(sess->cmdline, sess->cmd, sess->arg, ' ');
+./ftpproto.c:		printf("cmd=[%s] arg=[%s]\n", sess->cmd, sess->arg);
+./ftpproto.c:		str_upper(sess->cmd);
+./ftpproto.c:		if (strcmp("USER", sess->cmd) == 0)
+./ftpproto.c:		else if (strcmp("PASS", sess->cmd) == 0)
+./ftpproto.c:			if (strcmp(ctrl_cmds[i].cmd, sess->cmd) == 0)
+./ftpproto.c:	writen(sess->ctrl_fd, buf, strlen(buf));//发送给客户端
+./ftpproto.c:	writen(sess->ctrl_fd, buf, strlen(buf));
+./ftpproto.c:		writen(sess->data_fd, buf, strlen(buf));
+./ftpproto.c:	sess->data_process = 1;
+./ftpproto.c:	elapsed = (double)(curr_sec - sess->bw_transfer_start_sec);
+./ftpproto.c:	elapsed += (double)(curr_usec - sess->bw_transfer_start_usec) / (double)1000000;
+./ftpproto.c:		if (bw_rate <= sess->bw_upload_rate_max)
+./ftpproto.c:			sess->bw_transfer_start_sec = curr_sec;
+./ftpproto.c:			sess->bw_transfer_start_usec = curr_usec;
+./ftpproto.c:		rate_ratio = bw_rate / sess->bw_upload_rate_max;
+./ftpproto.c:		if (bw_rate <= sess->bw_download_rate_max)
+./ftpproto.c:			sess->bw_transfer_start_sec = curr_sec;
+./ftpproto.c:			sess->bw_transfer_start_usec = curr_usec;
+./ftpproto.c:		rate_ratio = bw_rate / sess->bw_download_rate_max;
+./ftpproto.c:	sess->bw_transfer_start_sec = get_time_sec();
+./ftpproto.c:	sess->bw_transfer_start_usec = get_time_usec();
+./ftpproto.c:	long long offset = sess->restart_pos;
+./ftpproto.c:	sess->restart_pos = 0;
+./ftpproto.c:	int fd = open(sess->arg, O_CREAT | O_WRONLY, 0666);
+./ftpproto.c:	if (sess->is_ascii)
+./ftpproto.c:			sess->arg, (long long)sbuf.st_size);
+./ftpproto.c:			sess->arg, (long long)sbuf.st_size);
+./ftpproto.c:	sess->bw_transfer_start_sec = get_time_sec();
+./ftpproto.c:	sess->bw_transfer_start_usec = get_time_usec();
+./ftpproto.c:		ret = read(sess->data_fd, buf, sizeof(buf));
+./ftpproto.c:		if (sess->abor_received)
+./ftpproto.c:	close(sess->data_fd);
+./ftpproto.c:	sess->data_fd = -1;
+./ftpproto.c:	if (flag == 0 && !sess->abor_received)
+./ftpproto.c:	if (sess->port_addr)
+./ftpproto.c:	if (sess->pasv_listen_fd != -1)
+./ftpproto.c:	priv_sock_send_cmd(sess->child_fd, PRIV_SOCK_PASV_ACTIVE);
+./ftpproto.c:	int active = priv_sock_get_int(sess->child_fd);
+./ftpproto.c:	priv_sock_send_cmd(sess->child_fd, PRIV_SOCK_GET_DATA_SOCK);
+./ftpproto.c:	unsigned short port = ntohs(sess->port_addr->sin_port);
+./ftpproto.c:	char *ip = inet_ntoa(sess->port_addr->sin_addr);
+./ftpproto.c:	priv_sock_send_int(sess->child_fd, (int)port);
+./ftpproto.c:	priv_sock_send_buf(sess->child_fd, ip, strlen(ip));
+./ftpproto.c:	char res = priv_sock_get_result(sess->child_fd);//接收应答
+./ftpproto.c:		sess->data_fd = priv_sock_recv_fd(sess->child_fd);//接收跟客户建立数据连接诶通道的文件
+./ftpproto.c:	priv_sock_send_cmd(sess->child_fd, PRIV_SOCK_PASV_ACCEPT);
+./ftpproto.c:	char res = priv_sock_get_result(sess->child_fd);
+./ftpproto.c:		sess->data_fd = priv_sock_recv_fd(sess->child_fd);
+./ftpproto.c:		if (connect_timeout(fd, sess->port_addr, tunable_connect_timeout) < 0)//服务端和客户端的端口连接
+./ftpproto.c:		sess->data_fd = fd;//保存服务端fd
+./ftpproto.c:		int fd = accept_timeout(sess->pasv_listen_fd, NULL, tunable_accept_timeout);
+./ftpproto.c:		close(sess->pasv_listen_fd);
+./ftpproto.c:		sess->data_fd = fd;
+./ftpproto.c:	if (sess->port_addr)
+./ftpproto.c:		free(sess->port_addr);
+./ftpproto.c:		sess->port_addr = NULL;
+./ftpproto.c:	struct passwd *pw = getpwnam(sess->arg);
+./ftpproto.c:	sess->uid = pw->pw_uid;
+./ftpproto.c:	struct passwd *pw = getpwuid(sess->uid);//根据uid取得密码结构体，客户端发送过来的
+./ftpproto.c:	char *encrypted_pass = crypt(sess->arg, sp->sp_pwdp);//明文和种子，加密过的密码作为种子
+./ftpproto.c:	activate_sigurg(sess->ctrl_fd);
+./ftpproto.c:	if (chdir(sess->arg) < 0)
+./ftpproto.c:	sscanf(sess->arg, "%u,%u,%u,%u,%u,%u", &v[2], &v[3], &v[4], &v[5], &v[0], &v[1]);
+./ftpproto.c:	sess->port_addr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+./ftpproto.c:	memset(sess->port_addr, 0, sizeof(struct sockaddr_in));
+./ftpproto.c:	sess->port_addr->sin_family = AF_INET;
+./ftpproto.c:	unsigned char *p = (unsigned char *)&sess->port_addr->sin_port;
+./ftpproto.c:	p = (unsigned char *)&sess->port_addr->sin_addr;
+./ftpproto.c:	sess->pasv_listen_fd = tcp_server(ip, 0);
+./ftpproto.c:	if (getsockname(sess->pasv_listen_fd, (struct sockaddr *)&addr, &addrlen) < 0)
+./ftpproto.c:	priv_sock_send_cmd(sess->child_fd, PRIV_SOCK_PASV_LISTEN);
+./ftpproto.c:	unsigned short port = (int)priv_sock_get_int(sess->child_fd);
+./ftpproto.c:	if (strcmp(sess->arg, "A") == 0)
+./ftpproto.c:		sess->is_ascii = 1;
+./ftpproto.c:	else if (strcmp(sess->arg, "I") == 0)
+./ftpproto.c:		sess->is_ascii = 0;
+./ftpproto.c:	long long offset = sess->restart_pos;
+./ftpproto.c:	sess->restart_pos = 0;
+./ftpproto.c:	int fd = open(sess->arg, O_RDONLY);
+./ftpproto.c:	if (sess->is_ascii)
+./ftpproto.c:			sess->arg, (long long)sbuf.st_size);
+./ftpproto.c:			sess->arg, (long long)sbuf.st_size);
+./ftpproto.c:		if (writen(sess->data_fd, buf, ret) != ret)
+./ftpproto.c:	sess->bw_transfer_start_sec = get_time_sec();
+./ftpproto.c:	sess->bw_transfer_start_usec = get_time_usec();
+./ftpproto.c:		ret = sendfile(sess->data_fd, fd, NULL, num_this_time);
+./ftpproto.c:		if (sess->abor_received)
+./ftpproto.c:	close(sess->data_fd);
+./ftpproto.c:	sess->data_fd = -1;
+./ftpproto.c:	if (flag == 0 && !sess->abor_received)
+./ftpproto.c:	close(sess->data_fd);
+./ftpproto.c:	sess->data_fd = -1;
+./ftpproto.c:	close(sess->data_fd);//***注意关闭，不然客户端还在一直阻塞
+./ftpproto.c:	sess->data_fd = -1;
+./ftpproto.c:	sess->restart_pos = str_to_longlong(sess->arg);
+./ftpproto.c:	sprintf(text, "Restart position accepted (%lld).", sess->restart_pos);
+./ftpproto.c:	if (mkdir(sess->arg, 0777) < 0)
+./ftpproto.c:	if (sess->arg[0] == '/')
+./ftpproto.c:		sprintf(text, "%s created", sess->arg);
+./ftpproto.c:			sprintf(text, "%s%s created", dir, sess->arg);
+./ftpproto.c:			sprintf(text, "%s/%s created", dir, sess->arg);
+./ftpproto.c:	if (rmdir(sess->arg) < 0)
+./ftpproto.c:	if (unlink(sess->arg) < 0)
+./ftpproto.c:	sess->rnfr_name = (char *)malloc(strlen(sess->arg) + 1);
+./ftpproto.c:	memset(sess->rnfr_name, 0, strlen(sess->arg) + 1);
+./ftpproto.c:	strcpy(sess->rnfr_name, sess->arg);
+./ftpproto.c:	if (sess->rnfr_name == NULL)
+./ftpproto.c:	rename(sess->rnfr_name, sess->arg);
+./ftpproto.c:	free(sess->rnfr_name);
+./ftpproto.c:	sess->rnfr_name = NULL;
+./ftpproto.c:	str_split(sess->arg , cmd, arg, ' ');
+./ftpproto.c:	writen(sess->ctrl_fd, " EPRT\r\n", strlen(" EPRT\r\n"));
+./ftpproto.c:	writen(sess->ctrl_fd, " EPSV\r\n", strlen(" EPSV\r\n"));
+./ftpproto.c:	writen(sess->ctrl_fd, " MDTM\r\n", strlen(" MDTM\r\n"));
+./ftpproto.c:	writen(sess->ctrl_fd, " PASV\r\n", strlen(" PASV\r\n"));
+./ftpproto.c:	writen(sess->ctrl_fd, " REST STREAM\r\n", strlen(" REST STREAM\r\n"));
+./ftpproto.c:	writen(sess->ctrl_fd, " SIZE\r\n", strlen(" SIZE\r\n"));
+./ftpproto.c:	writen(sess->ctrl_fd, " TVFS\r\n", strlen(" TVFS\r\n"));
+./ftpproto.c:	writen(sess->ctrl_fd, " UTF8\r\n", strlen(" UTF8\r\n"));
+./ftpproto.c:	if (stat(sess->arg, &buf) < 0)
+./ftpproto.c:	if (sess->bw_upload_rate_max == 0)
+./ftpproto.c:		writen(sess->ctrl_fd, text, strlen(text));
+./ftpproto.c:	else if (sess->bw_upload_rate_max > 0)
+./ftpproto.c:			sess->bw_upload_rate_max);
+./ftpproto.c:		writen(sess->ctrl_fd, text, strlen(text));
+./ftpproto.c:	if (sess->bw_download_rate_max == 0)
+./ftpproto.c:		writen(sess->ctrl_fd, text, strlen(text));
+./ftpproto.c:	else if (sess->bw_download_rate_max > 0)
+./ftpproto.c:			sess->bw_download_rate_max);
+./ftpproto.c:		writen(sess->ctrl_fd, text, strlen(text));
+./ftpproto.c:		sess->num_clients);
+./ftpproto.c:	writen(sess->ctrl_fd, text, strlen(text));
+./ftpproto.c:	writen(sess->ctrl_fd,
+./ftpproto.c:	writen(sess->ctrl_fd,
+./ftpproto.c:	writen(sess->ctrl_fd,
+./ftpproto.c:	writen(sess->ctrl_fd,

@@ -16,7 +16,7 @@ void start_data_alarm(void);
 
 void check_abor(session_t *sess);
 
-int list_common(session_t *sess, int detail);
+int list_common(session_t *sess, int detail);//列出列表
 void limit_rate(session_t *sess, int bytes_transfered, int is_upload);
 void upload_common(session_t *sess, int is_append);
 
@@ -141,12 +141,12 @@ void handle_sigalrm(int sig)
 
 void handle_sigurg(int sig)
 {
-	if (p_sess->data_fd == -1)
+	if (p_sess->data_fd == -1)//没有数据传输状态
 	{
 		return;
 	}
 
-	char cmdline[MAX_COMMAND_LINE] = {0};
+	char cmdline[MAX_COMMAND_LINE] = {0};//接收abor命令
 	int ret = readline(p_sess->ctrl_fd, cmdline, MAX_COMMAND_LINE);
 	if (ret <= 0)
 	{
@@ -156,12 +156,12 @@ void handle_sigurg(int sig)
 	if (strcmp(cmdline, "ABOR") == 0
 		|| strcmp(cmdline, "\377\364\377\362ABOR") == 0)
 	{
-		p_sess->abor_received = 1;
-		shutdown(p_sess->data_fd, SHUT_RDWR);
+		p_sess->abor_received = 1;//只是登记abor命令接收
+		shutdown(p_sess->data_fd, SHUT_RDWR);//断开数据连接通道
 	}
 	else
 	{
-		ftp_reply(p_sess, FTP_BADCMD, "Unknown command.");
+		ftp_reply(p_sess, FTP_BADCMD, "Unknown command.");//非法命令
 	}
 }
 
@@ -187,7 +187,7 @@ void start_cmdio_alarm(void)
 
 void start_data_alarm(void)
 {
-	if (tunable_data_connection_timeout > 0)
+	if (tunable_data_connection_timeout > 0)//设置超时标志
 	{
 		// 安装信号
 		signal(SIGALRM, handle_sigalrm);
@@ -212,13 +212,13 @@ void handle_child(session_t *sess)
 		memset(sess->arg, 0, sizeof(sess->arg));
 
 		start_cmdio_alarm();
-		ret = readline(sess->ctrl_fd, sess->cmdline, MAX_COMMAND_LINE);
+		ret = readline(sess->ctrl_fd, sess->cmdline, MAX_COMMAND_LINE);//客户端关闭返回为0，服务进程关闭
 		if (ret == -1)
 			ERR_EXIT("readline");
-		else if (ret == 0)
-			exit(EXIT_SUCCESS);
+		else if (ret == 0)//客户端断开连接
+			exit(EXIT_SUCCESS);//关闭ftp服务进程,会把和nobody进程的套接字关闭，然后nobody进程会priv_get_cmd()返回为0,不等于sizeof(res)就退出了
 
-		printf("cmdline=[%s]\n", sess->cmdline);
+		printf("cmdline=[%s]\n", sess->cmdline); //打印接收到的命令
 		// 去除\r\n
 		str_trim_crlf(sess->cmdline);
 		printf("cmdline=[%s]\n", sess->cmdline);
@@ -236,12 +236,12 @@ void handle_child(session_t *sess)
 		else if (strcmp("PASS", sess->cmd) == 0)
 		{
 			do_pass(sess);
-		}
-		*/
+		}*/
+		
 
 		int i;
 		int size = sizeof(ctrl_cmds) / sizeof(ctrl_cmds[0]);
-		for (i=0; i<size; i++)
+		for (i=0; i<size; i++)//查找对应的命令
 		{
 			if (strcmp(ctrl_cmds[i].cmd, sess->cmd) == 0)
 			{
@@ -260,7 +260,7 @@ void handle_child(session_t *sess)
 
 		if (i == size)
 		{
-			ftp_reply(sess, FTP_BADCMD, "Unknown command.");
+			ftp_reply(sess, FTP_BADCMD, "sorry???Unknown command.");//即使没有对应的命令也要响应，否则客户端就会阻塞
 		}
 	}
 }
@@ -269,7 +269,7 @@ void ftp_reply(session_t *sess, int status, const char *text)
 {
 	char buf[1024] = {0};
 	sprintf(buf, "%d %s\r\n", status, text);
-	writen(sess->ctrl_fd, buf, strlen(buf));
+	writen(sess->ctrl_fd, buf, strlen(buf));//发送给客户端
 }
 
 void ftp_lreply(session_t *sess, int status, const char *text)
@@ -393,7 +393,7 @@ void limit_rate(session_t *sess, int bytes_transfered, int is_upload)
 
 }
 
-void upload_common(session_t *sess, int is_append)
+void upload_common(session_t *sess, int is_append)//上传的不同方法
 {
 	// 创建数据连接
 	if (get_transfer_fd(sess) == 0)
@@ -424,9 +424,9 @@ void upload_common(session_t *sess, int is_append)
 	// STOR
 	// REST+STOR
 	// APPE
-	if (!is_append && offset == 0)		// STOR
+	if (!is_append && offset == 0)		// STOR上传，可能覆盖文件
 	{
-		ftruncate(fd, 0);
+		ftruncate(fd, 0);//清空文件
 		if (lseek(fd, 0, SEEK_SET) < 0)
 		{
 			ftp_reply(sess, FTP_UPLOADFAIL, "Could not create file.");
@@ -562,7 +562,7 @@ int port_active(session_t *sess)
 int pasv_active(session_t *sess)
 {
 	/*
-	if (sess->pasv_listen_fd != -1)
+	if (sess->pasv_listen_fd != -1)//由于现在监听套接字由nobody进程创建的，ftp服务进程所对应的监听套接字始终为-1；
 	{
 		if (port_active(sess))
 		{
@@ -572,7 +572,7 @@ int pasv_active(session_t *sess)
 		return 1;
 	}
 	*/
-	priv_sock_send_cmd(sess->child_fd, PRIV_SOCK_PASV_ACTIVE);
+	priv_sock_send_cmd(sess->child_fd, PRIV_SOCK_PASV_ACTIVE);//创建套接字，并且绑定监听，把监听套接字的ip和端口返回
 	int active = priv_sock_get_int(sess->child_fd);
 	if (active)
 	{
@@ -600,17 +600,17 @@ int get_port_fd(session_t *sess)
 	priv_sock_send_int(sess->child_fd, (int)port);
 	priv_sock_send_buf(sess->child_fd, ip, strlen(ip));
 
-	char res = priv_sock_get_result(sess->child_fd);
+	char res = priv_sock_get_result(sess->child_fd);//接收应答
 	if (res == PRIV_SOCK_RESULT_BAD)
 	{
 		return 0;
 	}
 	else if (res == PRIV_SOCK_RESULT_OK)
 	{
-		sess->data_fd = priv_sock_recv_fd(sess->child_fd);
+		sess->data_fd = priv_sock_recv_fd(sess->child_fd);//接收跟客户建立数据连接诶通道的文件
 	}
 
-	return 1;
+	return 1;//成功返回1，失败返回0
 }
 
 int get_pasv_fd(session_t *sess)
@@ -634,14 +634,13 @@ int get_transfer_fd(session_t *sess)
 	// 检测是否收到PORT或者PASV命令
 	if (!port_active(sess) && !pasv_active(sess))
 	{
-		//printf("yyyyyyyyyyyyyyyy\n");
-		ftp_reply(sess, FTP_BADSENDCONN, "Use PORT or PASV first.");
+		ftp_reply(sess, FTP_BADSENDCONN, "Use PORT or PASV first.");//客户端收到这条命令时，会把模式转化为port模式，所以可以LIST成功
 		return 0;
 	}
 
 	int ret = 1;
 	// 如果是主动模式
-	if (port_active(sess))
+	if (port_active(sess))//if (sess->port_addr)
 	{
 
 		/*
@@ -649,19 +648,23 @@ int get_transfer_fd(session_t *sess)
 		bind 20
 		connect
 		*/
-		// tcp_client(20);
+		// tcp_client(20);//服务进程绑定20端口需要nobody进程的协助
 
 		/*
-		int fd = tcp_client(0);
-		if (connect_timeout(fd, sess->port_addr, tunable_connect_timeout) < 0)
+		int fd = tcp_client(20);//服务端参数大于0，绑定一个端口；等于0随机绑定一个端口
+		if (connect_timeout(fd, sess->port_addr, tunable_connect_timeout) < 0)//服务端和客户端的端口连接，<0超时或者连接失败
 		{
 			close(fd);
 			return 0;
 		}
-
-		sess->data_fd = fd;
+		sess->data_fd = fd;//保存服务端数据套接字fd
 		*/
 
+		/*
+		向nobody发送PRIV_SOCK_GET_DATA_SOCK命令        1
+		向nobody发送一个整数port		       4
+		向nobody发送一个字符串ip                       不定长
+		*/
 		if (get_port_fd(sess) == 0)
 		{
 			ret = 0;
@@ -671,14 +674,13 @@ int get_transfer_fd(session_t *sess)
 	if (pasv_active(sess))
 	{
 		/*
-		int fd = accept_timeout(sess->pasv_listen_fd, NULL, tunable_accept_timeout);
+		int fd = accept_timeout(sess->pasv_listen_fd, NULL, tunable_accept_timeout);//NULL不需要对方的信息
 		close(sess->pasv_listen_fd);
 
 		if (fd == -1)
 		{
 			return 0;
 		}
-
 		sess->data_fd = fd;
 		*/
 		if (get_pasv_fd(sess) == 0)
@@ -689,7 +691,7 @@ int get_transfer_fd(session_t *sess)
 	}
 
 	
-	if (sess->port_addr)
+	if (sess->port_addr)//数据通道建立了，就没必要保留客户端的地址端口了
 	{
 		free(sess->port_addr);
 		sess->port_addr = NULL;
@@ -700,7 +702,7 @@ int get_transfer_fd(session_t *sess)
 		// 重新安装SIGALRM信号，并启动闹钟
 		start_data_alarm();
 	}
-
+	//ret=1;//临时
 	return ret;
 }
 
@@ -720,11 +722,11 @@ static void do_user(session_t *sess)
 	
 }
 
-static void do_pass(session_t *sess)
+static void do_pass(session_t *sess)//ftp服务进程
 {
 	// PASS 123456
-	struct passwd *pw = getpwuid(sess->uid);
-	if (pw == NULL)
+	struct passwd *pw = getpwuid(sess->uid);//根据uid取得密码结构体，客户端发送过来的
+	if (pw == NULL)        
 	{
 		// 用户不存在
 		ftp_reply(sess, FTP_LOGINERR, "Login incorrect.");
@@ -732,7 +734,7 @@ static void do_pass(session_t *sess)
 	}
 
 	printf("name=[%s]\n", pw->pw_name);
-	struct spwd *sp = getspnam(pw->pw_name);
+	struct spwd *sp = getspnam(pw->pw_name);//获取影子文件信息
 	if (sp == NULL)
 	{
 		ftp_reply(sess, FTP_LOGINERR, "Login incorrect.");
@@ -740,7 +742,7 @@ static void do_pass(session_t *sess)
 	}
 
 	// 将明文进行加密
-	char *encrypted_pass = crypt(sess->arg, sp->sp_pwdp);
+	char *encrypted_pass = crypt(sess->arg, sp->sp_pwdp);//明文和种子，加密过的密码作为种子
 	// 验证密码
 	if (strcmp(encrypted_pass, sp->sp_pwdp) != 0)
 	{
@@ -752,9 +754,9 @@ static void do_pass(session_t *sess)
 	activate_sigurg(sess->ctrl_fd);
 
 	umask(tunable_local_umask);
-	setegid(pw->pw_gid);
+	setegid(pw->pw_gid);//从root用户改为登录用户ccc
 	seteuid(pw->pw_uid);
-	chdir(pw->pw_dir);
+	chdir(pw->pw_dir);//更改到登录用户的家目录
 	ftp_reply(sess, FTP_LOGINOK, "Login successful.");
 }
 
@@ -808,23 +810,23 @@ static void do_port(session_t *sess)
 	ftp_reply(sess, FTP_PORTOK, "PORT command successful. Consider using PASV.");
 }
 
-static void do_pasv(session_t *sess)
+static void do_pasv(session_t *sess)   
 {
 	//Entering Passive Mode (192,168,244,100,101,46).
 
-	char ip[16] = {0};
-	getlocalip(ip);
+	//char ip[16] = {0};
+	//getlocalip(ip);//虚拟地址的localip是127开头，不能用
+	char ip[16]="192.168.44.149";
 
-/*
-	sess->pasv_listen_fd = tcp_server(ip, 0);
+	/*
+	sess->pasv_listen_fd = tcp_server(ip, 0);//产生一个随机端口(在套接字里面）
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
-	if (getsockname(sess->pasv_listen_fd, (struct sockaddr *)&addr, &addrlen) < 0)
+	if (getsockname(sess->pasv_listen_fd, (struct sockaddr *)&addr, &addrlen) < 0)//通过套接字listen_fd获取对应的端口，保存到addr当中
 	{
 		ERR_EXIT("getsockname");
 	}
-
-	unsigned short port = ntohs(addr.sin_port);
+	unsigned short port = ntohs(addr.sin_port);//转化为主机字节序
 	*/
 
 	priv_sock_send_cmd(sess->child_fd, PRIV_SOCK_PASV_LISTEN);
@@ -835,11 +837,9 @@ static void do_pasv(session_t *sess)
 	sscanf(ip, "%u.%u.%u.%u", &v[0], &v[1], &v[2], &v[3]);
 	char text[1024] = {0};
 	sprintf(text, "Entering Passive Mode (%u,%u,%u,%u,%u,%u).", 
-		v[0], v[1], v[2], v[3], port>>8, port&0xFF);
+		v[0], v[1], v[2], v[3], port>>8, port&0xFF);//端口的高八位和低八位
 
 	ftp_reply(sess, FTP_PASVOK, text);
-
-
 }
 
 static void do_type(session_t *sess)
@@ -876,13 +876,13 @@ static void do_retr(session_t *sess)
 	// 断点续载
 
 	// 创建数据连接
-	if (get_transfer_fd(sess) == 0)
+	if (get_transfer_fd(sess) == 0)//已经建立数据通道连接
 	{
 		return;
 	}
 
 	long long offset = sess->restart_pos;
-	sess->restart_pos = 0;
+	sess->restart_pos = 0;//下次下载就没断点了
 
 	// 打开文件
 	int fd = open(sess->arg, O_RDONLY);
@@ -912,7 +912,7 @@ static void do_retr(session_t *sess)
 
 	if (offset != 0)
 	{
-		ret = lseek(fd, offset, SEEK_SET);
+		ret = lseek(fd, offset, SEEK_SET);//从头开始定位
 		if (ret == -1)
 		{
 			ftp_reply(sess, FTP_FILEFAIL, "Failed to open file.");
@@ -938,13 +938,13 @@ static void do_retr(session_t *sess)
 	ftp_reply(sess, FTP_DATACONN, text);
 
 	int flag = 0;
-	// 下载文件
+	// 下载文件：效率不高
 
 	/*char buf[4096];
 
 	while (1)
 	{
-		ret = read(fd, buf, sizeof(buf));
+		ret = read(fd, buf, sizeof(buf));//用户空间陷入到内核空间，一次系统调用
 		if (ret == -1)
 		{
 			if (errno == EINTR)
@@ -963,7 +963,7 @@ static void do_retr(session_t *sess)
 			break;
 		}
 
-		if (writen(sess->data_fd, buf, ret) != ret)
+		if (writen(sess->data_fd, buf, ret) != ret)//将数据写入到套接口的缓冲区，又一次系统调用
 		{
 			flag = 2;
 			break;
@@ -973,8 +973,8 @@ static void do_retr(session_t *sess)
 
 	// ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 
-	long long bytes_to_send = sbuf.st_size;
-	if (offset > bytes_to_send)
+	long long bytes_to_send = sbuf.st_size;//文件大小
+	if (offset > bytes_to_send)//断点位置不对
 	{
 		bytes_to_send = 0;
 	}
@@ -988,7 +988,7 @@ static void do_retr(session_t *sess)
 	while (bytes_to_send)
 	{
 		int num_this_time = bytes_to_send > 4096 ? 4096 : bytes_to_send;
-		ret = sendfile(sess->data_fd, fd, NULL, num_this_time);
+		ret = sendfile(sess->data_fd, fd, NULL, num_this_time);//从当前位置开始偏移，所以为NULL,前面已经偏移到了正确位置了
 		if (ret == -1)
 		{
 			flag = 2;
@@ -1052,9 +1052,11 @@ static void do_appe(session_t *sess)
 
 static void do_list(session_t *sess)
 {
+	printf("reach do_list\n");
 	// 创建数据连接
 	if (get_transfer_fd(sess) == 0)
 	{
+		ftp_reply(sess, FTP_DATACONN, "list?????????.");
 		return;
 	}
 	// 150
@@ -1063,12 +1065,10 @@ static void do_list(session_t *sess)
 	// 传输列表
 	list_common(sess, 1);
 	// 关闭数据套接字
-	close(sess->data_fd);
+	close(sess->data_fd);//如果这个没有关闭的话，对方还在不停的接收，阻塞（死循环状态）
 	sess->data_fd = -1;
 	// 226
 	ftp_reply(sess, FTP_TRANSFEROK, "Directory send OK.");
-
-
 }
 
 static void do_nlst(session_t *sess)
@@ -1076,15 +1076,16 @@ static void do_nlst(session_t *sess)
 	// 创建数据连接
 	if (get_transfer_fd(sess) == 0)
 	{
+		ftp_reply(sess, FTP_DATACONN, "nlist?????????.");
 		return;
 	}
 	// 150
 	ftp_reply(sess, FTP_DATACONN, "Here comes the directory listing.");
 
 	// 传输列表
-	list_common(sess, 0);
+	list_common(sess, 0);//0表示短清单，1表示详细清单
 	// 关闭数据套接字
-	close(sess->data_fd);
+	close(sess->data_fd);//***注意关闭，不然客户端还在一直阻塞
 	sess->data_fd = -1;
 	// 226
 	ftp_reply(sess, FTP_TRANSFEROK, "Directory send OK.");

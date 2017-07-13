@@ -38,7 +38,7 @@ void drop_ip_count(void *ip);
 int main(void)
 {
 	/*
-	list_common();
+	list_common();//相当于LS
 	exit(EXIT_SUCCESS);
 	*/
 
@@ -74,7 +74,7 @@ int main(void)
 
 	parseconf_load_file(MINIFTP_CONF);
 	/*必须放到LoadFile的后面---守候进程*/
-	daemon(0, 0);
+	//daemon(0, 0);
 
 	printf("tunable_pasv_enable=%d\n", tunable_pasv_enable);
 	printf("tunable_port_enable=%d\n", tunable_port_enable);
@@ -169,14 +169,14 @@ typedef struct session
 	s_pid_ip_hash = hash_alloc(256, hash_func);
 
 	signal(SIGCHLD, handle_sigchld);
-	int listenfd = tcp_server(tunable_listen_address, tunable_listen_port);
+	int listenfd = tcp_server(tunable_listen_address, tunable_listen_port);//创建套接字
 	int conn;
 	pid_t pid;
 	struct sockaddr_in addr;
 
 	while (1)
 	{
-		conn = accept_timeout(listenfd, &addr, 0);
+		conn = accept_timeout(listenfd, &addr, 0);//超时设置，0关闭
 		if (conn == -1)
 			ERR_EXIT("accept_tinmeout");
 
